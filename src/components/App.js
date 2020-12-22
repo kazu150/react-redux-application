@@ -2,6 +2,7 @@ import React, { useReducer, createContext} from 'react';
 import reducer from '../reducers/';
 import Events from './Events';
 import EventForm from './EventForm';
+import OperationLogs from './OperationLogs';
 import AppContext from '../contexts/AppContext';
 
 export const EventContext = createContext();
@@ -18,6 +19,7 @@ const App = () => {
       <div className="container-fluid">
         <EventForm />
         <Events />
+        <OperationLogs />
       </div>
     </AppContext.Provider>
   );
