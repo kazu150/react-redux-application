@@ -20,8 +20,7 @@ const Event = ({ event }) => {
     }
 
     const handleClickCopyButton = () => {
-        // dispatch({type: COPY_EVENT, id})
-        console.log('copyid',id)
+        dispatch({type: COPY_EVENT, id})
     }
     return(
         <tr>

@@ -1,4 +1,4 @@
-import { CREATE_EVENT, DELETE_EVENT, DELETE_ALL_EVENTS } from '../actions/';
+import { CREATE_EVENT, DELETE_EVENT, DELETE_ALL_EVENTS, COPY_EVENT } from '../actions/';
 
 const events = (state = [], action) => {
     switch(action.type){
@@ -10,7 +10,12 @@ const events = (state = [], action) => {
         case DELETE_EVENT: 
             return state.filter(event => event.id !== action.id);
         case DELETE_ALL_EVENTS:
+            console.log("hoge")
             return [];
+        case COPY_EVENT:
+            const copiedEvent = { ...state[action.id - 1] };
+            copiedEvent.id = state.length + 1
+            return [...state, copiedEvent]
         default:
             return state;
         
