@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { ADD_OPERATION_LOG, DELETE_EVENT } from '../actions/';
+import { ADD_OPERATION_LOG, DELETE_EVENT, COPY_EVENT } from '../actions/';
 import AppContext from '../contexts/AppContext';
 import { timeCurrentIso8601 } from '../utils';
 
@@ -18,6 +18,11 @@ const Event = ({ event }) => {
             })
         }
     }
+
+    const handleClickCopyButton = () => {
+        // dispatch({type: COPY_EVENT, id})
+        console.log('copyid',id)
+    }
     return(
         <tr>
             <td>{id}</td>
@@ -27,8 +32,13 @@ const Event = ({ event }) => {
                 <button 
                     type="button" 
                     className="btn btn-danger" 
-                    onClick={() =>handleClickDeleteButton(event.id)}
+                    onClick={handleClickDeleteButton}
                 >削除</button>
+                <button 
+                    type="button" 
+                    className="btn btn-secondary" 
+                    onClick={handleClickCopyButton}
+                >コピーする</button>
             </td>
         </tr>
     );
