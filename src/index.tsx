@@ -1,10 +1,20 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import { createStore } from 'redux'
+import { Provider } from 'react-redux'
+import { reducer } from './reducer'
 import styled from 'styled-components'
 import * as color from './color'
 import { GlobalStyle } from './GlobalStyle'
 import { App } from './App'
 
+const store = createStore(
+    reducer,
+    undefined,
+    process.env.NODE_ENV === 'development'
+      ? window.__REDUX_DEVTOOLS_EXTENSION__?.()
+      : undefined,
+    )
 
 const Logo = styled.div`
     height: 100%;
@@ -53,9 +63,9 @@ const Card = styled.div`
 `
 
 ReactDOM.render(
-    <>
+    <Provider store={store}>
         <GlobalStyle />
         <App />
-    </>, 
+    </Provider>, 
     document.getElementById('app')
 )

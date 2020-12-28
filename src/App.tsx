@@ -1,135 +1,86 @@
-import React, { useState } from 'react'
+import React, { useEffect } from 'react'
 import styled from 'styled-components'
+import { useSelector, useDispatch,shallowEqual } from 'react-redux'
 import { Header as _Header } from './Header'
 import { Column } from './Column'
-import produce from 'immer'
+import { api } from './api'
 import { DeleteDialog } from './DeleteDialog'
 import { Overlay as _Overlay } from './Overlay'
 
 export function App() {
-    const [filterValue, setFilterValue] = useState('')
-    const [columns, setColumns] = useState([
-        {
-            id: 'A',
-            title: 'TODO',
-            cards: [
-                { id: 'a', text: '朝食をとる🍞' },
-                { id: 'b', text: 'SNSをチェックする🐦' },
-                { id: 'c', text: '布団に入る (:3[___]' },
-            ],
-        },
-        {
-            id: 'B',
-            title: 'Doing',
-            cards: [
-                { id: 'd', text: '顔を洗う👐' },
-                { id: 'e', text: '歯を磨く🦷' },
-            ],
-        },
-        {
-            id: 'C',
-            title: 'Waiting',
-            cards: [],
-        },
-        {
-            id: 'D',
-            title: 'Done',
-            cards: [{ id: 'f', text: '布団から出る (:3っ)っ -=三[＿＿]' }],
-        }
-    ])
-
-    const [draggingCardID, setDraggingCardID] = useState<string | undefined>(
-        undefined
+    const dispatch = useDispatch()
+    const columns = useSelector(
+        state => state.columns?.map(v => v.id),
+        shallowEqual
     )
 
-    const dropCardTo = (toID: string) => {
-        const fromID = draggingCardID
-        if(!fromID) return
-
-        setDraggingCardID(undefined)
-
-        if(fromID === toID) return
-
-        type Columns = typeof columns
-        setColumns(
-            produce((columns: Columns) => {
-                const card = columns
-                    .flatMap(col => col.cards)
-                    .find(c => c.id === fromID)
-                if (!card) return
-        
-                const fromColumn = columns.find(col =>
-                    col.cards.some(c => c.id === fromID),
-                )
-                if (!fromColumn) return
-        
-                fromColumn.cards = fromColumn.cards.filter(c => c.id !== fromID)
-        
-                const toColumn = columns.find(
-                    col => col.id === toID || col.cards.some(c => c.id === toID),
-                )
-                if (!toColumn) return
-        
-                let index = toColumn.cards.findIndex(c => c.id === toID)
-                if (index < 0) {
-                    index = toColumn.cards.length
+    useEffect(() => {
+        (async () => {
+            const columns = await api('GET /v1/columns', null)
+            dispatch({
+                type: 'App.SetColumns',
+                payload: {
+                    columns
                 }
-                toColumn.cards.splice(index, 0, card)
-                },
-            )
-        )
-    }
-
-    const [deletingCardID, setDeletingCardID] = useState<string | undefined>(
-        undefined
-    )
-
-    const deleteCard = () => {
-        const cardID = deletingCardID
-        if(!cardID) return
-        setDeletingCardID(undefined)
-
-        type Columns = typeof columns
-        setColumns(
-            produce((columns: Columns) => {
-                const column = columns.find(col => col.cards.some(c => c.id===cardID))
-                if(!column) return
-                column.cards = column.cards.filter(c => c.id !== cardID)
             })
-        )
-    }
+
+            const [unorderedCards, cardsOrder] = await Promise.all([
+                api('GET /v1/cards', null),
+                api('GET /v1/cardsOrder', null)
+            ])
+            dispatch({
+                type: 'App.SetCards',
+                payload: {
+                    cards: unorderedCards,
+                    cardsOrder
+                }
+            })
+
+        })()
+    }, [dispatch])
+
 
     return (
         <Container>
-            <Header filterValue={filterValue} onFilterChange={setFilterValue} />
+            <Header />
     
             <MainArea>
             <HorizontalScroll>
-                {columns.map(({id: columnID, title, cards}) => (
-                    <Column
-                        key={columnID}
-                        title={title}
-                        filterValue={filterValue}
-                        cards={cards}
-                        onCardDragStart={cardID => setDraggingCardID(cardID)}
-                        onCardDrop={entered => dropCardTo(entered ?? columnID)}
-                        onCardDeleteClick={cardID => setDeletingCardID(cardID)}
-                    />
-                ))}
+                {!columns ? (
+                    <Loading />
+                ) : (
+                    columns.map((id) => <Column key={id} id={id} />)
+                )}
             </HorizontalScroll>
             </MainArea>
-            {deletingCardID && (
-                <Overlay onClick={() => setDeletingCardID(undefined)}>
-                    <DeleteDialog 
-                        onConfirm={deleteCard}
-                        onCancel={() => setDeletingCardID(undefined)}
-                    />
-                </Overlay>
-            )}
+            <DialogOverlay />
         </Container>
     )
 }
+
+const Loading = styled.div.attrs({
+    children: 'Loading...',
+})`
+    font-size: 14px;
+`
     
+function DialogOverlay(){
+    const dispatch = useDispatch()
+    const cardIsBeingDeleted = useSelector(state => Boolean(state.deletingCardID))
+        const cancelDelete = () => 
+            dispatch({
+                type: 'Dialog.CancelDelete'
+            })
+    if(!cardIsBeingDeleted) {
+        return null
+    }
+    return (
+        <Overlay onClick={cancelDelete}>
+            <DeleteDialog />
+        </Overlay>
+    )
+}
+
 const Container = styled.div`
     display: flex;
     flex-flow: column;

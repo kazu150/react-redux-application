@@ -5,6 +5,9 @@
       "esbenp.prettier-vscode",
 
      // styled-components のシンタックスハイライトを有効にする
-     "jpoissonnier.vscode-styled-components"
+     "jpoissonnier.vscode-styled-components",
+
+     // ESLint の警告をリアルタイムで表示する
+     "dbaeumer.vscode-eslint",
     ]
   }
